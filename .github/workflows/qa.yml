@@ -6,6 +6,11 @@ on:
     branches: [main]
     paths: ["build/**", "ci/**", ".github/workflows/qa.yml"]
   workflow_dispatch:
+    inputs:
+      only:
+        description: "which jobs: all, desktop (Linux + Mac) or android"
+        default: all
+        required: false
 permissions:
   contents: read
 concurrency:
@@ -13,6 +18,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   desktop:
+    if: github.event_name != 'workflow_dispatch' || inputs.only != 'android'
     strategy:
       fail-fast: false
       matrix:
@@ -63,6 +69,7 @@ jobs:
         run: bash ci/status.sh
 
   android:
+    if: github.event_name != 'workflow_dispatch' || inputs.only != 'desktop'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -90,7 +97,7 @@ jobs:
           target: google_apis
           profile: pixel_6
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu guest -noaudio -no-boot-anim -camera-back none
           script: bash ci/run_android.sh
       - name: Encrypt results
         if: always()
