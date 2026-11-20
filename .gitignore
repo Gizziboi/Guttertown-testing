@@ -1,0 +1,5 @@
+work/
+out/
+results-*
+*.tgz
+*.tar

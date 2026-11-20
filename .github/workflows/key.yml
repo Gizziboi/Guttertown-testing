@@ -1,0 +1,25 @@
+name: key
+# One-time: derives the PUBLIC half of the encryption key (a certificate, or an age recipient) from the
+# secret and commits it, so builds can be encrypted to it. The secret itself is never printed or stored.
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/key.yml", "ci/derive_public.sh"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  derive:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Derive the public key
+        env:
+          GUTTERTOWN_KEY: ${{ secrets.GUTTERTOWN_KEY }}
+        run: bash ci/derive_public.sh
+      - name: Commit it
+        run: |
+          git config user.name "guttertown-qa"; git config user.email "qa@users.noreply.github.com"
+          git add ci/public_key.* >/dev/null 2>&1 || true
+          git diff --cached --quiet && { echo "nothing new"; exit 0; }
+          git commit -qm "public key" && git push -q && echo "public key committed"
