@@ -34,14 +34,14 @@ echo "" >> "$OUT/summary.md"
   done
 ) >/dev/null 2>&1 &
 LOOP=$!
-while IFS='|' read -r name tmo args; do
+while IFS='|' read -r -u 3 name tmo args; do
   [ -z "$name" ] && continue
   case "$name" in \#*) continue;; esac
   echo "$name" > "$OUT/.cur"
   log="$OUT/logs/$name.log"
   REC=""
   if [ "$TAG" = "linux" ]; then
-    ffmpeg -v quiet -y -f x11grab -framerate 8 -video_size 1280x720 -i "$DISPLAY" -c:v libx264 -preset veryfast -crf 32 -pix_fmt yuv420p "$OUT/video/$name.mp4" >/dev/null 2>&1 &
+    ffmpeg -nostdin -v quiet -y -f x11grab -framerate 8 -video_size 1280x720 -i "$DISPLAY" -c:v libx264 -preset veryfast -crf 32 -pix_fmt yuv420p "$OUT/video/$name.mp4" </dev/null >/dev/null 2>&1 &
     REC=$!
   fi
   t0=$(date +%s)
@@ -59,7 +59,7 @@ while IFS='|' read -r name tmo args; do
   grep -E "^  (ok|FAIL) |^    " "$log" | head -60 | sed 's/^/    /' >> "$OUT/summary.md"
   echo "$v $name"
   [ "$v" = FAIL ] && touch "$T/failed"
-done < "ci/tests_$TAG.txt"
+done 3< "ci/tests_$TAG.txt"
 touch "$OUT/.stop"; wait $LOOP 2>/dev/null
 rm -f "$OUT/.stop" "$OUT/.cur"
 # the pictures the tests take themselves
