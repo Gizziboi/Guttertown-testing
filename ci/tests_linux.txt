@@ -1,0 +1,17 @@
+# name|timeout s|arguments after -- (run_qa.sh's V lines)
+save|600|--scene=world --qa=save_test --set=traffic=0
+drive|600|--scene=world --drivetest=60
+car_feel|900|--scene=world --qa=car_feel --set=npc_density=0 --set=traffic=0
+jack_hold|600|--scene=world --qa=jack_hold --set=npc_density=0 --set=traffic=0
+car_exit|400|--scene=world --qa=car_exit --set=npc_density=0 --set=traffic=0
+wire_car|500|--scene=world --qa=wire_car --set=npc_density=0 --set=traffic=0
+car_menu|400|--scene=world --qa=car_menu_test --set=npc_density=0 --set=traffic=0
+blast|400|--scene=world --qa=blast_throw --set=npc_density=0 --set=traffic=0
+dash|400|--scene=world --qa=dash_test --set=npc_density=0 --set=traffic=0
+reroute|400|--scene=world --qa=reroute_test --set=npc_density=0 --set=traffic=0
+gps_road|600|--scene=world --qa=gps_road --world-seed=756786 --set=world_size=huge --set=world_layout=organic --set=npc_density=0 --set=traffic=0
+wall_hitch|1500|--scene=world --qa=wall_hitch --world-seed=756786 --set=world_size=supersize --set=world_layout=organic --hour=12 --set=npc_density=0 --set=traffic=0
+fire|900|--scene=world --qa=fire_test --hour=12 --set=npc_density=0 --set=traffic=0
+traffic_watch|900|--scene=world --qa=traffic_watch --set=npc_density=0 --set=traffic=2.5 --set=seed=4242 --secs=90
+walls|900|--scene=world --qa=wall_look --world-seed=874675 --set=world_size=huge --set=world_layout=organic --hour=12 --set=npc_density=0 --set=traffic=0
+soak|1500|--scene=world --soak=420
