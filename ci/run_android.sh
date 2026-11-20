@@ -10,10 +10,10 @@ OUT=out
 mkdir -p "$OUT/shots" "$OUT/logs"
 APK=$(ls work/*.apk | head -1)
 PKG=$(cat work/package.txt 2>/dev/null)
-shot() {   # the guest's screencap, else the emulator's own screenshot from the host side
-  local f=$1
-  adb exec-out screencap -p > "$f" 2>/dev/null
-  [ -s "$f" ] || adb emu screenrecord screenshot "$PWD/$f" >/dev/null 2>&1
+shot() {   # the emulator's own screenshot from the host side (the guest's screencap can't see the host-drawn GL
+  local f=$1  # surface: a flat fill), else the guest's screencap
+  adb emu screenrecord screenshot "$PWD/$f" >/dev/null 2>&1
+  [ -s "$f" ] || adb exec-out screencap -p > "$f" 2>/dev/null
 }
 if ! adb install -r "$APK" >/dev/null 2>&1; then echo "FAIL android_install"; touch "$T/failed"; exit 0; fi
 echo "PASS android_install"
