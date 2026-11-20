@@ -28,9 +28,21 @@ for i in $(seq -w 1 90); do
 done
 sleep 2
 adb logcat -d > "$OUT/logs/logcat.txt" 2>/dev/null
+# .061: the game's own frames (--qa-shots in the QA phone build): the app's external folder first (no root
+# needed), then its private files with root (google_apis images), then run-as (debuggable builds)
+mkdir -p "$OUT/game_shots"
+adb pull "/sdcard/Android/data/$PKG/files/shots/." "$OUT/game_shots/" >/dev/null 2>&1
+if [ -z "$(ls "$OUT/game_shots" 2>/dev/null)" ]; then
+  adb root >/dev/null 2>&1; sleep 2
+  adb pull "/data/data/$PKG/files/shots/." "$OUT/game_shots/" >/dev/null 2>&1
+fi
+if [ -z "$(ls "$OUT/game_shots" 2>/dev/null)" ]; then
+  adb exec-out run-as "$PKG" tar cf - files/shots 2>/dev/null | tar xf - -C "$OUT/game_shots" --strip-components=2 2>/dev/null
+fi
+ngs=$(ls "$OUT/game_shots" 2>/dev/null | wc -l)
 crash=$(grep -cE "FATAL EXCEPTION|SIGSEGV|SIGABRT|SCRIPT ERROR" "$OUT/logs/logcat.txt")
 {
-  echo "# Android: ${res:-no result} (crash / script error lines: $crash)"
+  echo "# Android: ${res:-no result} (crash / script error lines: $crash; game-made screenshots: $ngs)"
   grep -E " I godot +:   (ok|FAIL) | I godot +:     " "$OUT/logs/logcat.txt" | sed 's/.*godot *: /    /'
 } > "$OUT/summary.md"
 python3 ci/sheets_android.py "$OUT" >/dev/null 2>&1 || true

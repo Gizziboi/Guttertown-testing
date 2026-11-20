@@ -15,3 +15,9 @@ fire|900|--scene=world --qa=fire_test --hour=12 --set=npc_density=0 --set=traffi
 traffic_watch|900|--scene=world --qa=traffic_watch --set=npc_density=0 --set=traffic=2.5 --set=seed=4242 --secs=90
 walls|900|--scene=world --qa=wall_look --world-seed=874675 --set=world_size=huge --set=world_layout=organic --hour=12 --set=npc_density=0 --set=traffic=0
 soak|1500|--scene=world --soak=420
+hostage_fling|600|--scene=world --qa=hostage_fling --set=npc_density=0 --set=traffic=0
+exit_crowd|900|--scene=world --qa=exit_crowd --set=npc_density=0 --set=traffic=0
+wedge|400|--scene=world --qa=wedge_test --set=npc_density=0 --set=traffic=0
+map_tp|300|--scene=world --qa=map_tp --set=npc_density=0 --set=traffic=0
+zoom|400|--scene=world --qa=zoom_test --set=npc_density=0 --set=traffic=0
+cut_tag|400|--scene=world --qa=cut_tag --world-seed=874675 --set=world_size=huge --set=world_layout=organic --set=npc_density=0 --set=traffic=0
