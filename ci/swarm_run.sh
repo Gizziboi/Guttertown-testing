@@ -27,16 +27,18 @@ for b in plan["bots"]:
         d = os.path.join(out, "bots", b["bot"]); os.makedirs(d, exist_ok=True)
         json.dump(b["assign"], open(os.path.join(d, "assign.json"), "w"))
         json.dump(b, open(os.path.join(d, "plan.json"), "w"))
-        print("|".join(str(x) for x in [b["bot"], b["slot"], b["role"], b["seed"], b["world_seed"], b["secs"]]))
+        print("|".join(str(x) for x in [b["bot"], b["slot"], b["role"], b["seed"], b["world_seed"], b["secs"], " ".join(b.get("extra", []))]))
 PY
 pids=()
 names=()
-while IFS='|' read -r bot slot role seed wseed secs; do
+while IFS='|' read -r bot slot role seed wseed secs pextra; do
   [ -z "$bot" ] && continue
   d="$OUT/bots/$bot"
   u="$T/user_$bot"; mkdir -p "$u"
   extra=()
   [ "$role" = "visual" ] && extra=(--set=weather=clear --set=npc_density=0 --set=traffic=0)
+  # shellcheck disable=SC2206
+  [ -n "$pextra" ] && extra=($pextra)
   (
     if [ "$TAG" = "linux" ]; then
       disp=$((99 + slot))
@@ -49,7 +51,7 @@ while IFS='|' read -r bot slot role seed wseed secs; do
     fi
     t0=$(date +%s)
     # shellcheck disable=SC2086
-    $TO $((secs + 420)) "$BIN" "${ARGS[@]}" -- --scene=world --world-seed="$wseed" --set=show_guide=false ${extra[@]+"${extra[@]}"} \
+    $TO $((secs + 240)) "$BIN" "${ARGS[@]}" -- --scene=world --world-seed="$wseed" --set=show_guide=false ${extra[@]+"${extra[@]}"} \
       --qa=bots/bot --role="$role" --bot="$bot" --bot-seed="$seed" --assign="$d/assign.json" --secs="$secs" --out="$d" \
       > "$d/game.log" 2>&1 < /dev/null
     echo "$? $(( $(date +%s) - t0 ))" > "$d/exit.txt"

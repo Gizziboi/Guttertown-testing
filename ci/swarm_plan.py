@@ -37,18 +37,21 @@ pools = {
     "item": ids("weapon") + ids("pocket"),
     "ui": ids("app") + ids("menu") + ids("setting") + ids("input"),
     "visual": ids("weather") + ids("time") + ids("look"),
+    "endgame": ids("endgame"),
     "stress": [], "chaos": [], "long": [],
 }
 # Linux: 105 slots by role
-LINUX = [("mapgen", 6), ("explorer", 10), ("collision", 20), ("combat", 10), ("mechanic", 16), ("item", 8),
-         ("ui", 6), ("stress", 8), ("chaos", 10), ("long", 6), ("visual", 5)]
+# the user (2026-11-20): "I want the game stressed": 14 stress bots, half of them on Supersize
+# and (the user): end-game scenarios most players never reach: 6 bots, each going round the whole list
+LINUX = [("mapgen", 6), ("explorer", 9), ("collision", 16), ("combat", 10), ("mechanic", 14), ("item", 6),
+         ("ui", 6), ("stress", 14), ("chaos", 7), ("long", 6), ("visual", 5), ("endgame", 6)]
 assert sum(n for _, n in LINUX) == 105
 # Mac: 10 slots (the Metal side: the same visual spots, gore, UI, cars)
-MAC = [("visual", 2), ("combat", 2), ("mechanic", 2), ("ui", 1), ("collision", 1), ("chaos", 1), ("item", 1)]
+MAC = [("visual", 2), ("combat", 2), ("mechanic", 2), ("ui", 1), ("collision", 1), ("endgame", 1), ("item", 1)]
 assert sum(n for _, n in MAC) == 10
 
-SECS = {"long": 1320, "mapgen": 1080}       # each bot stays under 30 min with startup and teardown
-DEFAULT_SECS = 960
+SECS = {"long": 1500}       # each bot stays under 30 min with startup and teardown (the user: "the next tests can be longer")
+DEFAULT_SECS = 1440
 bots = []
 
 
@@ -67,13 +70,22 @@ def deal(plan, os_tag, njobs, per_job):
         # heavy maps first, one each
         if role == "mapgen":
             pool = sorted(pool, key=lambda s: (0 if ("supersize" in s or ":xl" in s) else 1, s))
+        if role == "endgame":
+            for i2 in idxs:          # every end-game bot runs every scenario (they're few and long)
+                assign[i2] = list(pool)
+            continue
         for j, item in enumerate(pool):
             assign[idxs[j % len(idxs)]].append(item)
     for i, role in enumerate(slots):
         job = i // per_job
         bot = f"{os_tag[0]}{job:02d}{chr(97 + i % per_job)}"
-        world_seed = 42 if role in ("collision", "visual", "ui", "item", "mechanic", "combat") else (bseed(bot) % 999983)
-        bots.append({"bot": bot, "os": os_tag, "job": job, "slot": i % per_job, "role": role, "seed": bseed(bot),
+        world_seed = 42 if role in ("collision", "visual", "ui", "item", "mechanic", "combat", "endgame") else (bseed(bot) % 999983)
+        extra = []
+        if role == "stress" and len([b for b in bots if b["role"] == "stress"]) % 2 == 0:
+            extra = ["--set=world_size=supersize"]
+        if role in ("chaos", "long") and i % 3 == 0:
+            extra = ["--set=world_size=xl"]
+        bots.append({"extra": extra, "bot": bot, "os": os_tag, "job": job, "slot": i % per_job, "role": role, "seed": bseed(bot),
                      "world_seed": world_seed, "secs": SECS.get(role, DEFAULT_SECS), "assign": assign[i]})
 
 
