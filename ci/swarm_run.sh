@@ -49,7 +49,7 @@ while IFS='|' read -r bot slot role seed wseed secs; do
     fi
     t0=$(date +%s)
     # shellcheck disable=SC2086
-    $TO $((secs + 420)) "$BIN" "${ARGS[@]}" -- --scene=world --world-seed="$wseed" --set=show_guide=false "${extra[@]}" \
+    $TO $((secs + 420)) "$BIN" "${ARGS[@]}" -- --scene=world --world-seed="$wseed" --set=show_guide=false ${extra[@]+"${extra[@]}"} \
       --qa=bots/bot --role="$role" --bot="$bot" --bot-seed="$seed" --assign="$d/assign.json" --secs="$secs" --out="$d" \
       > "$d/game.log" 2>&1 < /dev/null
     echo "$? $(( $(date +%s) - t0 ))" > "$d/exit.txt"
