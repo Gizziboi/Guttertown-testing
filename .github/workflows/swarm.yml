@@ -1,0 +1,154 @@
+name: swarm
+# The bot playtest swarm (the user, 2026-11-20): 35 Linux jobs x 3 bots + 5 Mac jobs x 2 bots, all at once, on
+# every new build and by hand. Same rules as qa.yml: builds, plans and results are encrypted with the
+# GUTTERTOWN_KEY certificate; the public log shows only job/bot names and PASS / FAIL; the merged,
+# unencrypted report goes to the private repo's test-results branch (swarm/) with GUTTERTOWN_PRIVATE_TOKEN.
+on:
+  push:
+    branches: [main]
+    paths: ["build/**"]
+  workflow_dispatch:
+    inputs:
+      secs:
+        description: "seconds per bot (blank = the plan's own, 16-22 min)"
+        default: ""
+        required: false
+permissions:
+  contents: read
+concurrency:
+  group: swarm
+  cancel-in-progress: true
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check secrets
+        env:
+          K: ${{ secrets.GUTTERTOWN_KEY }}
+        run: '[ -n "$K" ] || { echo "GUTTERTOWN_KEY secret is missing"; exit 1; }'
+      - name: Runner setup
+        run: bash ci/setup.sh linux
+      - name: Decrypt build
+        env:
+          GUTTERTOWN_KEY: ${{ secrets.GUTTERTOWN_KEY }}
+        run: bash ci/decrypt_build.sh linux
+      - name: Coverage map and plan
+        env:
+          SECS: ${{ inputs.secs }}
+        run: bash ci/swarm_plan.sh ${{ github.run_number }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: swarm-plan
+          path: plan.p7m
+          retention-days: 1
+      - name: Wipe
+        if: always()
+        run: rm -rf ./work ./out ./*.p7m
+
+  linux:
+    needs: plan
+    strategy:
+      fail-fast: false
+      max-parallel: 35
+      matrix:
+        job: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Runner setup
+        run: bash ci/setup.sh linux
+      - name: Decrypt build
+        env:
+          GUTTERTOWN_KEY: ${{ secrets.GUTTERTOWN_KEY }}
+        run: bash ci/decrypt_build.sh linux
+      - uses: actions/download-artifact@v4
+        with:
+          name: swarm-plan
+      - name: Decrypt plan
+        env:
+          GUTTERTOWN_KEY: ${{ secrets.GUTTERTOWN_KEY }}
+        run: bash ci/swarm_unplan.sh
+      - name: Bots
+        run: bash ci/swarm_run.sh linux ${{ matrix.job }}
+      - name: Encrypt results
+        if: always()
+        run: bash ci/encrypt_results.sh swarm-linux-${{ matrix.job }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swarm-res-linux-${{ matrix.job }}
+          path: results-swarm-linux-${{ matrix.job }}.p7m
+          retention-days: 2
+          if-no-files-found: ignore
+      - name: Wipe
+        if: always()
+        run: rm -rf ./work ./out ./*.p7m
+      - name: Result
+        run: bash ci/status.sh
+
+  mac:
+    needs: plan
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        job: [0, 1, 2, 3, 4]
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Runner setup
+        run: bash ci/setup.sh mac
+      - name: Decrypt build
+        env:
+          GUTTERTOWN_KEY: ${{ secrets.GUTTERTOWN_KEY }}
+        run: bash ci/decrypt_build.sh mac
+      - uses: actions/download-artifact@v4
+        with:
+          name: swarm-plan
+      - name: Decrypt plan
+        env:
+          GUTTERTOWN_KEY: ${{ secrets.GUTTERTOWN_KEY }}
+        run: bash ci/swarm_unplan.sh
+      - name: Bots
+        run: bash ci/swarm_run.sh mac ${{ matrix.job }}
+      - name: Encrypt results
+        if: always()
+        run: bash ci/encrypt_results.sh swarm-mac-${{ matrix.job }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swarm-res-mac-${{ matrix.job }}
+          path: results-swarm-mac-${{ matrix.job }}.p7m
+          retention-days: 2
+          if-no-files-found: ignore
+      - name: Wipe
+        if: always()
+        run: rm -rf ./work ./out ./*.p7m
+      - name: Result
+        run: bash ci/status.sh
+
+  summary:
+    needs: [plan, linux, mac]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Runner setup
+        run: sudo apt-get install -y -qq python3-pil >/dev/null 2>&1; echo ok
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: swarm-*
+          path: arts
+      - name: Merge, rank, compare
+        env:
+          GUTTERTOWN_KEY: ${{ secrets.GUTTERTOWN_KEY }}
+          GUTTERTOWN_PRIVATE_TOKEN: ${{ secrets.GUTTERTOWN_PRIVATE_TOKEN }}
+        run: bash ci/swarm_merge.sh ${{ github.run_number }}
+      - name: Wipe
+        if: always()
+        run: rm -rf ./arts ./res ./rep ./*.p7m

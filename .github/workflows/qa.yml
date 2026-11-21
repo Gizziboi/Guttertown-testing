@@ -100,6 +100,19 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: bash ci/run_android.sh
+      - name: Pictures on a guest-rendered emulator
+        if: always()
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disk-size: 4G
+          disable-animations: true
+          emulator-options: -no-window -gpu guest -noaudio -no-boot-anim -camera-back none
+          script: bash ci/run_android.sh guest
       - name: Encrypt results
         if: always()
         run: bash ci/encrypt_results.sh android

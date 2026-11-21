@@ -4,9 +4,14 @@
 # the city, people, fire, gore), baked into the build.
 #  android_install  the build installs
 #  android_test     its result line in the log is OK (no crash, no script error); a screenshot every 4 s meanwhile
+#  .062: `run_android.sh guest` is a second, picture-only pass on an emulator started with -gpu guest (the
+#  guest renders in software itself, so its screencap and the game's own readback should see real frames;
+#  runs 6 and 7 got only the flat clear colour #0b0a0e under swiftshader_indirect). Never fails the job.
 set -u
 T=${RUNNER_TEMP:?}
+MODE=${1:-test}
 OUT=out
+[ "$MODE" = "guest" ] && OUT=out/guest
 mkdir -p "$OUT/shots" "$OUT/logs"
 APK=$(ls work/*.apk | head -1)
 PKG=$(cat work/package.txt 2>/dev/null)
@@ -15,8 +20,11 @@ shot() {   # the emulator's own screenshot from the host side (the guest's scree
   adb emu screenrecord screenshot "$PWD/$f" >/dev/null 2>&1
   [ -s "$f" ] || adb exec-out screencap -p > "$f" 2>/dev/null
 }
-if ! adb install -r "$APK" >/dev/null 2>&1; then echo "FAIL android_install"; touch "$T/failed"; exit 0; fi
-echo "PASS android_install"
+if ! adb install -r "$APK" >/dev/null 2>&1; then
+  if [ "$MODE" = "guest" ]; then echo "INFO android_guest: no install"; exit 0; fi
+  echo "FAIL android_install"; touch "$T/failed"; exit 0
+fi
+[ "$MODE" = "guest" ] || echo "PASS android_install"
 adb logcat -c >/dev/null 2>&1
 adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
 res=""
@@ -46,6 +54,10 @@ crash=$(grep -cE "FATAL EXCEPTION|SIGSEGV|SIGABRT|SCRIPT ERROR" "$OUT/logs/logca
   grep -E " I godot +:   (ok|FAIL) | I godot +:     " "$OUT/logs/logcat.txt" | sed 's/.*godot *: /    /'
 } > "$OUT/summary.md"
 python3 ci/sheets_android.py "$OUT" >/dev/null 2>&1 || true
+if [ "$MODE" = "guest" ]; then
+  echo "INFO android_guest: ${res:-no result}, game frames $ngs"
+  exit 0
+fi
 case "$res" in "BLAST OK"*) [ "$crash" = "0" ] && { echo "PASS android_test"; exit 0; };; esac
 echo "FAIL android_test"; touch "$T/failed"
 exit 0

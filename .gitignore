@@ -3,3 +3,4 @@ out/
 results-*
 *.tgz
 *.tar
+__pycache__/
