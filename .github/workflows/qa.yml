@@ -44,6 +44,10 @@ jobs:
         env:
           GUTTERTOWN_KEY: ${{ secrets.GUTTERTOWN_KEY }}
         run: bash ci/decrypt_build.sh ${{ matrix.tag }}
+      - name: Clean check
+        env:
+          GUTTERTOWN_PRIVATE_TOKEN: ${{ secrets.GUTTERTOWN_PRIVATE_TOKEN }}
+        run: bash ci/clean_check.sh ${{ matrix.tag }}
       - name: Run tests
         run: bash ci/run_tests.sh ${{ matrix.tag }}
       - name: Encrypt results
@@ -89,6 +93,10 @@ jobs:
         env:
           GUTTERTOWN_KEY: ${{ secrets.GUTTERTOWN_KEY }}
         run: bash ci/decrypt_build.sh android
+      - name: Clean check
+        env:
+          GUTTERTOWN_PRIVATE_TOKEN: ${{ secrets.GUTTERTOWN_PRIVATE_TOKEN }}
+        run: bash ci/clean_check.sh android
       - name: Run on the emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -98,21 +106,9 @@ jobs:
           profile: pixel_6
           disk-size: 4G
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: bash ci/run_android.sh
-      - name: Pictures on a guest-rendered emulator
-        if: always()
-        continue-on-error: true
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 30
-          arch: x86_64
-          target: google_apis
-          profile: pixel_6
-          disk-size: 4G
-          disable-animations: true
+          # R17f: -gpu guest is the main pass now (it gives real frames; swiftshader_indirect gave a flat fill)
           emulator-options: -no-window -gpu guest -noaudio -no-boot-anim -camera-back none
-          script: bash ci/run_android.sh guest
+          script: bash ci/run_android.sh
       - name: Encrypt results
         if: always()
         run: bash ci/encrypt_results.sh android
