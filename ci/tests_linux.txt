@@ -27,3 +27,4 @@ gore2|900|--scene=world --qa=gore2_look
 ped_traffic|1200|--scene=world --qa=ped_traffic --set=traffic=2.5 --set=npc_density=2.5 --secs=150 --n=3
 body_sync|600|--scene=world --qa=body_sync
 stomp|600|--scene=world --qa=stomp_test --set=npc_density=0 --set=traffic=0
+mush|900|--scene=world --qa=mush_test --set=npc_density=0 --set=traffic=0
