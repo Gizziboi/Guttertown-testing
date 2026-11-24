@@ -31,3 +31,5 @@ mush|900|--scene=world --qa=mush_test --set=npc_density=0 --set=traffic=0
 halves|900|--scene=world --qa=halves_test --set=npc_density=0 --set=traffic=0
 halves_fix|900|--scene=world --qa=halves_fix_test --set=npc_density=0 --set=traffic=0
 shells|1100|--scene=world --qa=shells_test
+ch4|1500|--scene=world --qa=ch4_test
+momentum|900|--scene=world --qa=momentum_test --set=npc_density=0 --set=traffic=0
