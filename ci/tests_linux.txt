@@ -34,3 +34,4 @@ shells|1100|--scene=world --qa=shells_test
 ch4|1800|--scene=world --qa=ch4_test
 shell_niche|900|--scene=world --qa=shell_niche_test
 momentum|900|--scene=world --qa=momentum_test --set=npc_density=0 --set=traffic=0
+resist|900|--scene=world --qa=resist_test --set=npc_density=0 --set=traffic=0
