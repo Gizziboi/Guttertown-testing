@@ -35,3 +35,4 @@ ch4|1800|--scene=world --qa=ch4_test
 shell_niche|900|--scene=world --qa=shell_niche_test
 momentum|900|--scene=world --qa=momentum_test --set=npc_density=0 --set=traffic=0
 resist|900|--scene=world --qa=resist_test --set=npc_density=0 --set=traffic=0
+breakfree|1200|--scene=world --qa=breakfree_test --set=npc_density=0 --set=traffic=0
