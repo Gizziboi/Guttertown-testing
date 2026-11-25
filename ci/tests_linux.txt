@@ -38,3 +38,4 @@ resist|900|--scene=world --qa=resist_test --set=npc_density=0 --set=traffic=0
 breakfree|1200|--scene=world --qa=breakfree_test --set=npc_density=0 --set=traffic=0
 tyre_head|900|--scene=world --qa=tyre_head_test --set=npc_density=0 --set=traffic=0
 dead_lock|900|--scene=world --qa=dead_lock_test --set=npc_density=0 --set=traffic=0
+eye|600|--scene=world --qa=eye_look --set=npc_density=0 --set=traffic=0 --hour=12
